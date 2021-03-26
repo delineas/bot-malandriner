@@ -4,26 +4,21 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use App\Domain\TelegramMessageModel;
 use App\Domain\UseCases\ReplyToNapalm;
+use Telegram\Bot\Objects\Update;
+use Telegram\Bot\Laravel\Facades\Telegram;
 
 class TelegramController extends Controller
 {
     public function webhook(Request $request) {
 
-        $requestData = $request->all();
-        if(!isset($requestData['message'])) {
-            return response('None', 200);
-        }
+        /** @var Update $update */
+        $update = Telegram::getWebhookUpdates();
 
-        $telegramMessage = new TelegramMessageModel($requestData);
+        Log::info($update->getChat()['id']);
 
-        if($telegramMessage->getChatId() != config('botmalandriner.chat_id')) {
-            return response('None', 200);
-        }
-
-        (new ReplyToNapalm($telegramMessage))();
+        (new ReplyToNapalm($update))();
         
-        //Log::info($telegramMessage->getChatId());
+        response()->json(['ok' => true])->send();
     }
 }

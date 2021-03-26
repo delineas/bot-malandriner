@@ -175,9 +175,6 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
         App\Providers\TelescopeServiceProvider::class,
-
-        Telegram\Bot\Laravel\TelegramServiceProvider::class,
-
     ],
 
     /*
@@ -229,9 +226,6 @@ return [
         'URL' => Illuminate\Support\Facades\URL::class,
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
-
-        'Telegram'  => Telegram\Bot\Laravel\Facades\Telegram::class,
-
 
     ],
 
