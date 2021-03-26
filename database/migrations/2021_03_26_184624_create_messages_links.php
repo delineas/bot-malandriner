@@ -16,7 +16,7 @@ class CreateMessagesLinks extends Migration
         Schema::create('messages_links', function (Blueprint $table) {
             $table->id();
             $table->string('link');
-            $table->string('hashtag');
+            $table->string('hashtag')->nullable();
             $table->string('username');
             $table->timestamps();
         });

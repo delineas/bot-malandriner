@@ -26,19 +26,19 @@ class CaptureLink
     $text = $this->update->getMessage()['text'];
     $from = $this->update->getMessage()['from'];
 
-    $regex = '/(https?:\/\/[a-z0-9.\?\=#_\/-]*)/m';
+    $linkPattern = '/(https?:\/\/[a-z0-9.\?\=#_\/-]*)/m';
+    $hashtagPattern = '/(#[\d\p{L}]+)/mu';
 
-    $results = preg_match_all($regex, $text, $matches, PREG_SET_ORDER, 0);
+    $link = $this->matchText($linkPattern, $text);
 
-    if(!$results) {
+    if(!$link) {
       return;
     }
-
-    $link = $matches[0][0];
+    $hashtag = $this->matchText($hashtagPattern, $text);
 
     MessageLink::create([
       'link' => $link,
-      'hashtag' => '',
+      'hashtag' => (!$hashtag ? '' : $hashtag),
       'username' => $from['username'],
     ]);
 
@@ -49,4 +49,15 @@ class CaptureLink
     ]);
 
   }
+
+  private function matchText($pattern, $text) {
+    $results = preg_match_all($pattern, $text, $matches, PREG_SET_ORDER, 0);
+
+    if(!$results) {
+      return false;
+    }
+
+    return $matches[0][0];
+  }
+
 }
