@@ -16,6 +16,10 @@ class ReplyToNapalm {
 
   public function __invoke() {
 
+    if(!isset($this->update->getMessage()['text'])) {
+      return;
+    }
+
     $text = $this->update->getMessage()['text'];
 
     if(strpos($text, 'napalm') !== false) {
