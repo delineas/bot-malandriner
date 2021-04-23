@@ -23,11 +23,11 @@ class ReplyToNapalm {
     $text = $this->update->getMessage()['text'];
 
     if(strpos($text, 'napalm') !== false) {
-      Telegram::sendMessage([
+      return [
         'chat_id' => $this->update->getChat()['id'],
-        'text' => config('botmalandriner.reply_napalm'),
+        'text' =>  'napalm responde', //config('botmalandriner.reply_napalm'),
         'parse_mode' => 'MarkdownV2'
-      ]);
+      ];
     }
 
   }
