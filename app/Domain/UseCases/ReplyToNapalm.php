@@ -2,29 +2,24 @@
 
 namespace App\Domain\UseCases;
 
-use Telegram\Bot\Objects\Update;
-use Telegram\Bot\Laravel\Facades\Telegram;
+use App\Adapters\MessengerMessageInterface;
+
 
 class ReplyToNapalm {
 
-  private $update;
+  private $messengerMessage;
 
-  public function __construct(Update $update)
-  {
-    $this->update = $update;
+  public function __construct(MessengerMessageInterface $messengerMessage) {
+    $this->messengerMessage = $messengerMessage;
   }
 
   public function __invoke() {
 
-    if(!isset($this->update->getMessage()['text'])) {
-      return;
-    }
-
-    $text = $this->update->getMessage()['text'];
+    $text = $this->messengerMessage->getText();
 
     if(strpos($text, 'napalm') !== false) {
       return [
-        'chat_id' => $this->update->getChat()['id'],
+        'chat_id' => $this->messengerMessage->getChatId(),
         'text' =>  'napalm responde', //config('botmalandriner.reply_napalm'),
         'parse_mode' => 'MarkdownV2'
       ];
