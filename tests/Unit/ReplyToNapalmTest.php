@@ -2,9 +2,11 @@
 
 namespace Tests\Unit;
 
+use App\Adapters\TelegramReply;
 use PHPUnit\Framework\TestCase;
 use App\Adapters\TelegramMessage;
 use App\Domain\UseCases\ReplyToNapalm;
+use Prophecy\Argument;
 
 class ReplyToNapalmTest extends TestCase
 {
@@ -42,21 +44,37 @@ class ReplyToNapalmTest extends TestCase
         $messengerMessage = $this->prophesize(TelegramMessage::class);
         $messengerMessage->getText()->willReturn($request['message']['text']);
         $messengerMessage->getChatId()->shouldBeCalledTimes(0);
+        $messengerReply = $this->prophesize(TelegramReply::class);
 
-        $answer = (new ReplyToNapalm($messengerMessage->reveal()))();
+        $answer = (new ReplyToNapalm($messengerMessage->reveal(), $messengerReply->reveal()))();
 
         $this->assertEquals(null, $answer);
     }
 
     public function test_cuando_el_mensaje_dice_napalm_el_bot_responde()
     {
+        // Arrange request
         $request = $this->getRequestMessageText('napalm');
         $messengerMessage = $this->prophesize(TelegramMessage::class);
         $messengerMessage->getText()->willReturn($request['message']['text']);
         $messengerMessage->getChatId()->willReturn($request['message']['chat']['id']);
 
-        $answer = (new ReplyToNapalm($messengerMessage->reveal()))();
+        // Arrange reply
+        $messengerReply = $this->prophesize(TelegramReply::class);
+        $messengerReply->setText(Argument::exact('napalm responde'))->shouldBeCalledTimes(1);
+        $messengerReply->setChatId(Argument::exact($request['message']['chat']['id']))->shouldBeCalledTimes(1);
 
-        $this->assertEquals('napalm responde', $answer['text']);
+        $expectedReply = [
+            'chat_id' => $request['message']['chat']['id'],
+            'text' => 'napalm responde', 
+            'parse_mode' => 'MarkdownV2'
+        ];
+        $messengerReply->getReply()->willReturn($expectedReply);
+
+        // Act
+        $answer = (new ReplyToNapalm($messengerMessage->reveal(), $messengerReply->reveal()))();
+
+        // Assert
+        $this->assertEquals($expectedReply, $answer);
     }
 }

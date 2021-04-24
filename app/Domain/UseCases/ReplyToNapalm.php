@@ -2,15 +2,18 @@
 
 namespace App\Domain\UseCases;
 
+use App\Adapters\MessengerReplyInterface;
 use App\Adapters\MessengerMessageInterface;
 
 
 class ReplyToNapalm {
 
   private $messengerMessage;
+  private $messengerReply;
 
-  public function __construct(MessengerMessageInterface $messengerMessage) {
+  public function __construct(MessengerMessageInterface $messengerMessage, MessengerReplyInterface $messengerReply) {
     $this->messengerMessage = $messengerMessage;
+    $this->messengerReply = $messengerReply;
   }
 
   public function __invoke() {
@@ -18,11 +21,9 @@ class ReplyToNapalm {
     $text = $this->messengerMessage->getText();
 
     if(strpos($text, 'napalm') !== false) {
-      return [
-        'chat_id' => $this->messengerMessage->getChatId(),
-        'text' =>  'napalm responde', //config('botmalandriner.reply_napalm'),
-        'parse_mode' => 'MarkdownV2'
-      ];
+      $this->messengerReply->setText('napalm responde');
+      $this->messengerReply->setChatId($this->messengerMessage->getChatId());
+      return $this->messengerReply->getReply();
     }
 
   }
