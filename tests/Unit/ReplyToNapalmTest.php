@@ -2,18 +2,16 @@
 
 namespace Tests\Unit;
 
-use App\Domain\UseCases\ReplyToNapalm;
-use Illuminate\Support\Collection;
 use PHPUnit\Framework\TestCase;
-use Telegram\Bot\Objects\Update;
+use App\Adapters\TelegramMessage;
+use App\Domain\UseCases\ReplyToNapalm;
 
 class ReplyToNapalmTest extends TestCase
 {
 
-    public function test_cuando_el_mensaje_no_dice_napalm_el_bot_no_respondo()
+    public function getRequestMessageText($text)
     {
-
-        $request = json_decode('{
+        return json_decode('{
         "update_id": 74430134,
         "message": {
             "message_id": 826,
@@ -26,62 +24,38 @@ class ReplyToNapalmTest extends TestCase
                 "language_code": "es"
             },
             "chat": {
-                "id": -511961606,
+                "id": -666,
                 "title": "Web Reactiva Grupo Test",
                 "type": "group",
                 "all_members_are_administrators": false
             },
             "date": 1614973230,
             "edit_date": 1614973347,
-            "text": "otra cosa"
+            "text": "' . $text . '"
             }
         }', true);
+    }
 
-        $message = collect($request['message']);
+    public function test_cuando_el_mensaje_no_dice_napalm_el_bot_no_respondo()
+    {
+        $request = $this->getRequestMessageText('otra cosa');
+        $messengerMessage = $this->prophesize(TelegramMessage::class);
+        $messengerMessage->getText()->willReturn($request['message']['text']);
+        $messengerMessage->getChatId()->shouldBeCalledTimes(0);
 
-        $update = $this->prophesize(Update::class);
-        $update->getMessage()->willReturn($message);
-        $update->getChat()->shouldBeCalledTimes(0);
-
-        $answer = (new ReplyToNapalm($update->reveal()))();
+        $answer = (new ReplyToNapalm($messengerMessage->reveal()))();
 
         $this->assertEquals(null, $answer);
     }
 
-    public function test_cuando_el_mensaje_dice_napalm_el_bot_responde() {
+    public function test_cuando_el_mensaje_dice_napalm_el_bot_responde()
+    {
+        $request = $this->getRequestMessageText('napalm');
+        $messengerMessage = $this->prophesize(TelegramMessage::class);
+        $messengerMessage->getText()->willReturn($request['message']['text']);
+        $messengerMessage->getChatId()->willReturn($request['message']['chat']['id']);
 
-        $request = json_decode('{
-        "update_id": 74430134,
-        "message": {
-            "message_id": 826,
-            "from": {
-                "id": 14977870,
-                "is_bot": false,
-                "first_name": "Daniel",
-                "last_name": "Primo",
-                "username": "danielprimo",
-                "language_code": "es"
-            },
-            "chat": {
-                "id": -511961606,
-                "title": "Web Reactiva Grupo Test",
-                "type": "group",
-                "all_members_are_administrators": false
-            },
-            "date": 1614973230,
-            "edit_date": 1614973347,
-            "text": "napalm"
-            }
-        }', true);
-
-        $message = collect($request['message']);
-        $chat = collect($request['message']['chat']);
-
-        $update = $this->prophesize(Update::class);
-        $update->getMessage()->willReturn($message);
-        $update->getChat()->willReturn($chat);
-
-        $answer = (new ReplyToNapalm($update->reveal()))();
+        $answer = (new ReplyToNapalm($messengerMessage->reveal()))();
 
         $this->assertEquals('napalm responde', $answer['text']);
     }
