@@ -2,11 +2,12 @@
 
 namespace Tests\Unit;
 
+use Prophecy\Argument;
+use App\Adapters\ConfigAdapter;
 use App\Adapters\TelegramReply;
 use PHPUnit\Framework\TestCase;
 use App\Adapters\TelegramMessage;
 use App\Domain\UseCases\ReplyToNapalm;
-use Prophecy\Argument;
 
 class ReplyToNapalmTest extends TestCase
 {
@@ -59,20 +60,24 @@ class ReplyToNapalmTest extends TestCase
         $messengerMessage->getText()->willReturn($request['message']['text']);
         $messengerMessage->getChatId()->willReturn($request['message']['chat']['id']);
 
+        // Arrange Config
+        $config = $this->prophesize(ConfigAdapter::class);
+        $config->get(Argument::exact('botmalandriner.reply_napalm'))->willReturn('string');
+        //$config->reveal()->get('botmalandriner.reply_napalm')
+
         // Arrange reply
         $messengerReply = $this->prophesize(TelegramReply::class);
-        $messengerReply->setText(Argument::exact('napalm responde'))->shouldBeCalledTimes(1);
+        $messengerReply->setText(Argument::exact($config->reveal()->get('botmalandriner.reply_napalm')))->shouldBeCalledTimes(1);
         $messengerReply->setChatId(Argument::exact($request['message']['chat']['id']))->shouldBeCalledTimes(1);
-
         $expectedReply = [
             'chat_id' => $request['message']['chat']['id'],
-            'text' => 'napalm responde', 
+            'text' => $config->reveal()->get('botmalandriner.reply_napalm'),
             'parse_mode' => 'MarkdownV2'
         ];
         $messengerReply->getReply()->willReturn($expectedReply);
 
         // Act
-        $answer = (new ReplyToNapalm($messengerMessage->reveal(), $messengerReply->reveal()))();
+        $answer = (new ReplyToNapalm($messengerMessage->reveal(), $messengerReply->reveal(), $config->reveal()))();
 
         // Assert
         $this->assertEquals($expectedReply, $answer);

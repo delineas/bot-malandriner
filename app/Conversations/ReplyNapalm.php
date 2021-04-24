@@ -2,7 +2,9 @@
 
 namespace App\Conversations;
 
-class ReplyNapalm {
+use App\Conversations\ReplyInterface;
+
+class ReplyNapalm implements ReplyInterface {
 
   private $answerMessage;
 
@@ -14,7 +16,7 @@ class ReplyNapalm {
     if(strpos($input, 'napalm') !== false) {
       return $this->answerMessage;
     }
-    return '';
+    return false;
   }
 
 }
